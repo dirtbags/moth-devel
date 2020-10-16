@@ -73,6 +73,18 @@ class TestMoth(unittest.TestCase):
             puzzle.add_stream(buf, visible=True)
             self.assertGreater(len(puzzle.files), 0)
 
+    def test_add_script_stream(self):
+        puzzle = moth.Puzzle(12345, 1)
+        data = b"Test"
+        script_name = b"Test script"
+
+        with io.BytesIO(data) as buf:
+            puzzle.add_script_stream(buf, name=script_name)
+            self.assertIn(script_name, puzzle.files)
+            self.assertEqual(puzzle.files[script_name].stream.read(), data)
+            self.assertEqual(puzzle.files[script_name].visible, False)
+            self.assertIn(script_name, puzzle.scripts)
+        
     def test_add_file(self):
         puzzle = moth.Puzzle(12345, 1)
         data = b"Test"
@@ -107,6 +119,11 @@ class TestMoth(unittest.TestCase):
 
         self.assertEqual(puzzle.authors, ["foo"])
 
+    def test_author_legacy_interoperability_empty(self):
+        puzzle = moth.Puzzle(12345, 1)
+        self.assertEqual(puzzle.authors, [])
+        self.assertIsNone(puzzle.author)
+
     def test_authors_legacy(self):
         puzzle = moth.Puzzle(12345, 1)
 
@@ -120,12 +137,125 @@ class TestMoth(unittest.TestCase):
 
         self.assertEqual(puzzle.authors, [])
 
+    def test_make_answer(self):
+        puzzle = moth.Puzzle(12345, 1)
+        word_count = 5
+        separator = " "
+
+        answer = puzzle.make_answer(word_count=word_count, sep=separator)
+
+        self.assertIsNotNone(answer)
+
+        self.assertEqual(puzzle.answers, [answer])
+
+        self.assertEqual(answer.count(separator), word_count - 1)
+
+    def test_html_body(self):
+        puzzle = moth.Puzzle(12345, 1)
+        message = "Hello there"
+        puzzle.body.write(message)
+
+        res = puzzle.html_body()
+
+        self.assertEqual(message, res)
+
+    def test_package(self):
+        puzzle = moth.Puzzle(12345, 1)
+        message = "foo"
+        attachment_name = "bar"
+        attachment = b"baz"
+
+        with io.BytesIO(attachment) as buf:
+            puzzle.add_stream(buf, name=attachment_name, visible=True)
+            res = puzzle.package()
+
+        self.assertIsInstance(res, dict)
+
+        self.assertIn("Pre", res)
+        for field in ["Authors", "Attachments", "Scripts", "Body", "AnswerHashes", "AnswerPattern"]:
+            self.assertIn(field, res["Pre"])
+
+        self.assertIn(attachment_name, res["Pre"]["Attachments"])
+
+
+        self.assertIn("Post", res)
+        for field in ["Objective", "Success", "KSAs"]:
+            self.assertIn(field, res["Post"])
+
+        self.assertIsInstance(res["Post"]["Success"], dict)
+
+
+        self.assertIn("Debug", res)
+        for field in ["Log", "Hints", "Summary"]:
+            self.assertIn(field, res["Debug"])
+
+
+        self.assertIn("Answers", res)
+        self.assertIsInstance(res["Answers"], list)
+
+
+    def test_v3_markdown(self):
+        from moth.moth import v3markup
+        puzzle = moth.Puzzle(12345, 1)
+        puzzle.markup = v3markup()
+        message = "**Hello there**"
+        expected = "<p><strong>Hello there</strong></p>"
+        puzzle.body.write(message)
+
+        res = puzzle.html_body()
+
+        self.assertIn(expected, res)
+
+
 class TestPuzzleSuccess(unittest.TestCase):
 
-    def test_success_load(self):
+    def test_success_set(self):
         success = moth.PuzzleSuccess()
 
         expected = "foo"
 
         success.acceptable = expected
 
+        self.assertIn("acceptable", success)
+
+        self.assertEqual(success["acceptable"], expected)
+
+    def test_success_load(self):
+        success = moth.PuzzleSuccess(acceptable="foo", mastery="bar")
+
+        self.assertEqual(success.acceptable, "foo")
+        self.assertEqual(success.mastery, "bar")
+
+    def test_success_cast(self):
+        success = moth.PuzzleSuccess(acceptable="foo", mastery="bar")
+
+        self.assertIsInstance(success, dict)
+
+    def test_success_default_attr(self):
+        success = moth.PuzzleSuccess()
+        self.assertIsNone(success.acceptable)
+        self.assertIsNone(success.mastery)
+        self.assertIsNone(success["acceptable"])
+        self.assertIsNone(success["mastery"])
+
+    def test_success_no_attr_get(self):
+        success = moth.PuzzleSuccess()
+        with self.assertRaisesRegex(AttributeError, "object has no attribute"):
+            _ = success.foo
+
+    def test_success_no_attr_set(self):
+        success = moth.PuzzleSuccess()
+        with self.assertRaisesRegex(AttributeError, "object has no attribute"):
+            success.foo = "bar"
+
+    def test_success_load_invalid_field(self):
+        success = moth.PuzzleSuccess(acceptable="foo", mastery="bar", baz="bah")
+
+        self.assertEqual(success.acceptable, "foo")
+        self.assertEqual(success.mastery, "bar")
+
+        with self.assertRaises(KeyError):
+            success["baz"]
+
+        with self.assertRaisesRegex(AttributeError, "object has no attribute"):
+            _ = success.baz

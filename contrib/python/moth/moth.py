@@ -18,6 +18,8 @@ import tempfile
 import types
 import warnings
 
+API_VERSION = "4.0"
+
 LOGGER = logging.getLogger(__name__)
 SEED = os.getenv("SEED", "0")
 
@@ -420,16 +422,15 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         return [sha256hash(a) for a in self.answers]
 
 
-def v3markup(buf):
+def v3markup():
     """Get a markdown handler compatible with MOTHv3, using Mistune
 
     :param buf: A string containing valid Markdown
 
     :returns: A string containing rendered Markdown
     """
-
     import mistune  # pylint: disable=import-outside-toplevel
-    return mistune.markdown(buf, escape=False)
+    return mistune.Markdown(renderer=mistune.Renderer(escape=False))
 
 
 def mkpuzzle(make, args, points=None):

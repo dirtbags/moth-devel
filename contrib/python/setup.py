@@ -6,7 +6,7 @@ if sys.version_info < (3,5):
 
 setup(
     name = "moth",
-    version = open("VERSION", "r").read().strip(),
+    version = "4.0rc1",
     description = "The MOTH development toolkit",
     packages = ["moth"],
     python_requires = "~=3.5",
