@@ -107,6 +107,7 @@ class PuzzleSuccess(dict):
         super().__init__()
         for key in self.valid_fields:
             self[key] = None
+
         for key, value in kwargs.items():
             if key in self.valid_fields:
                 self[key] = value
@@ -189,6 +190,8 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
 
         :param new_author: The new author
         """
+
+        warnings.warn("This author field has been deprecated. Please use authors instead", DeprecationWarning)
 
         self.authors = [new_author]
 

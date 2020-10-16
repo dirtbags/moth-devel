@@ -99,13 +99,33 @@ class TestMoth(unittest.TestCase):
         test_data = [1 for x in range(4*16)]
         puzzle.hexdump(test_data)
 
-    def test_authors_legacy(self):
+    def test_authors_legacy_interoperability(self):
         puzzle = moth.Puzzle(12345, 1)
-        puzzle.author = "foo"
+
+        with self.assertWarns(DeprecationWarning):
+            puzzle.author = "foo"
 
         self.assertEqual(puzzle.authors, ["foo"])
+
+    def test_authors_legacy(self):
+        puzzle = moth.Puzzle(12345, 1)
+
+        puzzle.authors = ["foo", "bar"]
+
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(puzzle.author, "foo")
 
     def test_authors(self):
         puzzle = moth.Puzzle(12345, 1)
 
         self.assertEqual(puzzle.authors, [])
+
+class TestPuzzleSuccess(unittest.TestCase):
+
+    def test_success_load(self):
+        success = moth.PuzzleSuccess()
+
+        expected = "foo"
+
+        success.acceptable = expected
+
