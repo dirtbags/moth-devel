@@ -441,7 +441,7 @@ def mkpuzzle(make, args, points=None):
     """
 
     puzzle = Puzzle(SEED, points)
-    puzzle.markup = v3markup
+    puzzle.markup = v3markup()
     if points:
         rpuzzle = make(puzzle, points)
     else:

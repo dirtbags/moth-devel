@@ -17,7 +17,7 @@ setup(
     extras_require = {
         "scapy": ["scapy>=2.4.2"],
         "pillow": ["Pillow>=5.4.1"],
-        "full": ["scapy>=2.5.2", "Pillow>=5.4.1"],
+        "full": ["scapy>=2.4.2", "Pillow>=5.4.1"],
     },
     tests_require = [
         "coverage==4.5.3", 
