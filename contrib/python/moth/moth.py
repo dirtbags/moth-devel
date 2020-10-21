@@ -1,5 +1,6 @@
 """Basic library for building Python-based MOTH puzzles/categories"""
 
+from argparse import ArgumentParser
 import contextlib
 import copy
 import hashlib
@@ -21,7 +22,7 @@ import warnings
 API_VERSION = "4.0"
 
 LOGGER = logging.getLogger(__name__)
-SEED = os.getenv("SEED", "0")
+SEED = os.getenv("SEED", "auto")
 
 
 def sha256hash(buf):
@@ -130,27 +131,15 @@ class PuzzleSuccess(dict):
 
 class Puzzle:  # pylint: disable=too-many-instance-attributes
 
-    """A MOTH Puzzle.
-    :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
-                          It is combined with the puzzle points.
-    :param points: The point value of the puzzle.
-    """
+    """A MOTH Puzzle"""
 
-    def __init__(self, category_seed, points):
-        """A MOTH Puzzle.
-
-        :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
-                              It is combined with the puzzle points.
-        :param points: The point value of the puzzle.
-        """
-
-        super().__init__()
+    def __init__(self, seed=None):
+        """A MOTH Puzzle."""
 
         self._source_format = "py"
 
         self.markup = None
 
-        self.points = points or 0
         self.summary = None
         self.authors = []
         self.answers = []
@@ -167,7 +156,14 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         self.ksas = []  # A list of references to related NICE KSAs (e.g. K0058, . . .)
 
         self.logs = []
-        self.randseed = "%s %d" % (category_seed, self.points)
+
+        if seed is None:
+            seed = SEED
+
+        if seed == "auto":
+            seed = random.SystemRandom()
+
+        self.randseed = "%s %s" % (seed, os.getcwd())
         self.rand = random.Random(self.randseed)
 
     @property
@@ -210,7 +206,11 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         :param filename: A string representing the "name" of the puzzle file
         :returns: A file-like object
         """
-        return self.files[filename].stream
+
+        if filename in self.files:
+            return self.files[filename].stream
+
+        raise FileNotFoundError("%s was not found in this puzzle" % (filename,))
 
     def log(self, *vals):
         """Add a new log message to this puzzle.
@@ -383,12 +383,26 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
             body = self.markup(body)
         return body
 
+    def _validate(self):
+        """Ensure that the puzzle can be exported
+
+        :return: `False` if the puzzle is invalid, `True`, otherwise.
+        """
+
+        if len(self.answers) == 0 and self.answer.__code__ is Puzzle.answer.__code__:
+            return False
+
+        return True
+
     def package(self):
         """Return a dict packaging of the puzzle.
         :param answers: Whether or not to include answers in the results, defaults to False
 
         :return: Dict representation of the puzzle
         """
+
+        if not self._validate():
+            raise Exception("This puzzle does not currently validate")
 
         attachments = [fn for fn, f in self.files.items()]
         return {
@@ -421,6 +435,41 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
 
         return [sha256hash(a) for a in self.answers]
 
+    def answer(self, answer):
+        """Handle an answer submission
+
+        :return: a `dict` containing the key "Correct" which
+            is either True, if the submission is correct, or
+            False, otherwise. Other keys may be added
+        """
+        res = {"Correct": False}
+        if answer in self.answers:
+            res["Correct"] = True
+
+        return res
+
+
+class Category:
+    """A category containing 1 or more puzzles"""
+
+    pointvals = []
+
+    def puzzle(self, points):  # pylint: disable=no-self-use
+        """Return a puzzle with the given point value
+
+        :param points: Point value to generate
+        :return: Puzzle object worth `points` points
+        """
+
+        return Puzzle(seed=points)
+
+    def __iter__(self):
+        for point in self.pointvals:
+            yield self.puzzle(point)
+
+    def __call__(self, points):
+        return self.puzzle(points)
+
 
 def v3markup():
     """Get a markdown handler compatible with MOTHv3, using Mistune
@@ -433,70 +482,42 @@ def v3markup():
     return mistune.Markdown(renderer=mistune.Renderer(escape=False))
 
 
-def mkpuzzle(make, args, points=None):
-    """Handle a puzzle request
+def _build_puzzle_parser(puzzle_parser):
+    puzzle_parsers = puzzle_parser.add_subparsers()
+    puzzle_puzzle_parser = puzzle_parsers.add_parser("puzzle")
+    puzzle_puzzle_parser.set_defaults(func=lambda puzz_ob, args: json.dump(puzz_ob.package(), sys.stdout))
 
-    :param args: An array of string arguments
-    :param points: The requested point value for a puzzle
-    """
+    puzzle_file_handler = puzzle_parsers.add_parser("file")
+    puzzle_file_handler.set_defaults(func=lambda puzz_ob, args: shutil.copyfileobj(puzz_ob.open(args.filename), sys.stdout.buffer))
+    puzzle_file_handler.add_argument("filename")
 
-    puzzle = Puzzle(SEED, points)
-    puzzle.markup = v3markup()
-    if points:
-        rpuzzle = make(puzzle, points)
-    else:
-        rpuzzle = make(puzzle)
-    if rpuzzle:
-        puzzle = rpuzzle
-
-    if len(args) < 1:
-        raise RuntimeError(
-            "Must provide an action: puzzle, file FILENAME, or answer ANSWER")
-
-    if args[0] == "puzzle":
-        json.dump(puzzle.package(), sys.stdout)
-    elif args[0] == "file":
-        fp = puzzle.open(args[1])  # pylint: disable=invalid-name
-        shutil.copyfileobj(fp, sys.stdout.buffer)
-    elif args[0] == "answer":
-        if args[1] in puzzle.answers:
-            print("correct")
-        else:
-            print("wrong")
-    else:
-        raise RuntimeError("Unsupported action: %s" % (args[0],))
+    puzzle_answer_handler = puzzle_parsers.add_parser("answer")
+    puzzle_answer_handler.set_defaults(func=lambda puzz_ob, args: json.dump(puzz_ob.answer(args.answer), sys.stdout))
+    puzzle_answer_handler.add_argument("answer")
 
 
-def mkcategory(make, pointvals, args):
-    """Build a category of puzzle
+def _build_category_parser(category_parser):
+    category_parsers = category_parser.add_subparsers()
 
-    :param pointvals: a function returning the list of valid point values
-    :param args: An array of string arguments
-    """
+    category_inventory_handler = category_parsers.add_parser("inventory")
+    category_inventory_handler.set_defaults(func=lambda cat_ob, args: json.dump(sorted(cat_ob.pointvals), sys.stdout))
 
-    if not pointvals:
-        raise RuntimeError("No pointvals function provided for category mode")
+    category_puzzle_handler = category_parsers.add_parser("puzzle")
+    category_puzzle_handler.add_argument("points")
+    category_puzzle_handler.set_defaults(func=lambda cat_ob, args: json.dump(cat_ob(args.points).package(), sys.stdout))
 
-    pointval = 0
-    if len(args) >= 2:
-        pointval = int(args[1])
-        if pointval not in pointvals:
-            raise RuntimeError(
-                "Requested point value is not in this category's pointvals")
+    category_puzzle_file_handler = category_parsers.add_parser("file")
+    category_puzzle_file_handler.add_argument("points")
+    category_puzzle_file_handler.add_argument("filename")
+    category_puzzle_file_handler.set_defaults(func=lambda cat_ob, args: shutil.copyfileobj(cat_ob(args.points).open(args.filename), sys.stdout.buffer))
 
-    if len(args) < 1:
-        raise RuntimeError(
-            "Must provide an action: inventory, puzzle POINTS, file POINTS FILENAME, or answer POINTS ANSWER")
-
-    if args[0] == "inventory":
-        json.dump(sorted(pointvals), sys.stdout)
-    elif args[0] in ("puzzle", "file", "answer"):
-        mkpuzzle(make, [args[0]] + args[2:], pointval)
-    else:
-        raise RuntimeError("Unsupported action: %s" % (args[0],))
+    category_puzzle_answer_handler = category_parsers.add_parser("answer")
+    category_puzzle_answer_handler.add_argument("points")
+    category_puzzle_answer_handler.add_argument("answer")
+    category_puzzle_answer_handler.set_defaults(func=lambda cat_ob, args: json.dump(cat_ob(args.points).answer(args.answer), sys.stdout))
 
 
-def main(make, pointvals=None):
+def main(make):
     """main: Guess what to do based on how we were invoked.
 
     For transpiled puzzles, this will do the right thing.
@@ -514,16 +535,64 @@ def main(make, pointvals=None):
 
     """
 
-    random.seed(os.getenv("SEED", "0"))
+    parser = ArgumentParser(description="MOTH python handler. The file's name *must* be mkpuzzle or mkcategory")
 
-    myself = pathlib.Path(sys.argv[0])
-    if myself.name == "mkpuzzle":
-        mkpuzzle(make, sys.argv[1:])
-    elif myself.name == "mkcategory":
-        mkcategory(make, pointvals, sys.argv[1:])
-    else:
-        raise NotImplementedError(
-            "Can't auto-detect action for executable named %s" % (myself.name,))
+    # If no command is provided, don't do anything
+    parser.set_defaults(func=lambda *args: parser.print_help())
+    subparsers = parser.add_subparsers()
+
+    puzzle_parser = subparsers.add_parser("mkpuzzle")
+    _build_puzzle_parser(puzzle_parser)
+
+    category_parser = subparsers.add_parser("mkcategory")
+
+    _build_category_parser(category_parser)
+
+    raw_args = sys.argv
+    raw_args[0] = pathlib.Path(raw_args[0]).name
+
+    args = parser.parse_args(raw_args)
+
+    args.func(make, args)
+
+
+def build_puzzle(make):
+    """Build a puzzle from a legacy make function
+
+    :param make: a function which accepts a single argument,
+        a `Puzzle` object, which the function modified to
+        create a puzzle
+    """
+    puzzle = Puzzle()
+    puzzle.markup = v3markup()
+    make(puzzle)
+    main(puzzle)
+
+
+def build_category(make, pointvals):
+    """Build a category from a legacy make function
+
+    :param make: a function which accepts a `Puzzle` object
+        and an `int` value for a point value, which modifies
+        the provided `Puzzle` object to create a puzzle
+
+    :param pointvals: an array of integer point values
+        which this category holds
+    """
+
+    my_pointvals = list(pointvals)
+
+    class CatWrapper(Category):  # pylint: disable=too-few-public-methods
+        """A simple wrapper to convert a legacy make function into a `Category`"""
+        pointvals = my_pointvals
+
+        def puzzle(self, points):
+            """A simple wrapper to convert a legacy make function into a `Category`'s `Puzzle`"""
+            puzzle = Puzzle(seed=points)
+            make(puzzle, points)
+            return puzzle
+
+    main(CatWrapper())
 
 
 # Words for generating answers.

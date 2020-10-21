@@ -14,32 +14,29 @@ class TestMoth(unittest.TestCase):
         self.assertEqual(sha256hash(input_data), expected)
 
     def test_log(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         message = "Test message"
         puzzle.log(message)
         self.assertIn(message, puzzle.logs)
 
     def test_random_hash(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         self.assertEqual(len(puzzle.random_hash()), 8)
 
     def test_random_hash_repeatable(self):
-        puzzle1 = moth.Puzzle(12345, 1)
-        puzzle2 = moth.Puzzle(12345, 1)
-        puzzle3 = moth.Puzzle(11111, 1)
-        puzzle4 = moth.Puzzle(12345, 2)
+        puzzle1 = moth.Puzzle(12345)
+        puzzle2 = moth.Puzzle(12345)
+        puzzle3 = moth.Puzzle(11111)
 
         p1_hash = puzzle1.random_hash()
         p2_hash = puzzle2.random_hash()
         p3_hash = puzzle3.random_hash()
-        p4_hash = puzzle4.random_hash()
 
         self.assertEqual(p1_hash, p2_hash)
         self.assertNotEqual(p1_hash, p3_hash)
-        self.assertNotEqual(p1_hash, p4_hash)
 
     def test_make_temp_file(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         tt = puzzle.make_temp_file(name="Test stream")
         tt.write(b"Test")
         self.assertIn("Test stream", puzzle.files)
@@ -47,7 +44,7 @@ class TestMoth(unittest.TestCase):
         self.assertEqual(puzzle.files["Test stream"].stream.read(), b"Test")
 
     def test_add_stream_visible(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         data = b"Test"
         with io.BytesIO(data) as buf:
             puzzle.add_stream(buf, name="Test stream", visible=True)
@@ -56,7 +53,7 @@ class TestMoth(unittest.TestCase):
             self.assertEqual(puzzle.files["Test stream"].visible, True)
 
     def test_add_stream_notvisible(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         data = b"Test"
 
         with io.BytesIO(data) as buf:
@@ -66,7 +63,7 @@ class TestMoth(unittest.TestCase):
             self.assertEqual(puzzle.files["Test stream"].visible, False)
 
     def test_add_stream_visible_no_name(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         data = b"Test"
 
         with io.BytesIO(data) as buf:
@@ -74,7 +71,7 @@ class TestMoth(unittest.TestCase):
             self.assertGreater(len(puzzle.files), 0)
 
     def test_add_script_stream(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         data = b"Test"
         script_name = b"Test script"
 
@@ -86,7 +83,7 @@ class TestMoth(unittest.TestCase):
             self.assertIn(script_name, puzzle.scripts)
         
     def test_add_file(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         data = b"Test"
         with tempfile.NamedTemporaryFile() as tf:
             tf.write(data)
@@ -97,22 +94,22 @@ class TestMoth(unittest.TestCase):
             self.assertEqual(puzzle.files[os.path.basename(tf.name)].visible, True)
 
     def test_hexdump(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         test_data = [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         puzzle.hexdump(test_data)
 
     def test_hexump_none(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         test_data = [0, 1, 2, 3, None, 5, 6, 7, 8]
         puzzle.hexdump(test_data)
 
     def test_hexdump_elided_dupe_row(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         test_data = [1 for x in range(4*16)]
         puzzle.hexdump(test_data)
 
     def test_authors_legacy_interoperability(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
 
         with self.assertWarns(DeprecationWarning):
             puzzle.author = "foo"
@@ -120,12 +117,12 @@ class TestMoth(unittest.TestCase):
         self.assertEqual(puzzle.authors, ["foo"])
 
     def test_author_legacy_interoperability_empty(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         self.assertEqual(puzzle.authors, [])
         self.assertIsNone(puzzle.author)
 
     def test_authors_legacy(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
 
         puzzle.authors = ["foo", "bar"]
 
@@ -133,12 +130,12 @@ class TestMoth(unittest.TestCase):
             self.assertEqual(puzzle.author, "foo")
 
     def test_authors(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
 
         self.assertEqual(puzzle.authors, [])
 
     def test_make_answer(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         word_count = 5
         separator = " "
 
@@ -151,7 +148,7 @@ class TestMoth(unittest.TestCase):
         self.assertEqual(answer.count(separator), word_count - 1)
 
     def test_html_body(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         message = "Hello there"
         puzzle.body.write(message)
 
@@ -160,10 +157,11 @@ class TestMoth(unittest.TestCase):
         self.assertEqual(message, res)
 
     def test_package(self):
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         message = "foo"
         attachment_name = "bar"
         attachment = b"baz"
+        puzzle.answers.append("foo")
 
         with io.BytesIO(attachment) as buf:
             puzzle.add_stream(buf, name=attachment_name, visible=True)
@@ -196,7 +194,7 @@ class TestMoth(unittest.TestCase):
 
     def test_v3_markdown(self):
         from moth.moth import v3markup
-        puzzle = moth.Puzzle(12345, 1)
+        puzzle = moth.Puzzle(12345)
         puzzle.markup = v3markup()
         message = "**Hello there**"
         expected = "<p><strong>Hello there</strong></p>"
