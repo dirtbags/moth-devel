@@ -13,20 +13,21 @@ COPY	moth	/build/moth/
 RUN	python setup.py bdist_wheel
 
 
-FROM dirtbags/moth:v4.0.0 AS moth
+FROM dirtbags/moth:v4.0.1 AS moth
 
 
-FROM python:3.8-slim-buster AS server
+FROM python:3.8-slim-buster AS devel-server
 RUN	apt-get update && \
 	apt-get upgrade -y && \
 	apt-get clean all && \
 	rm -rf /var/lib/apt/lists/*
 
-WORKDIR	/moth/
+WORKDIR	/
 
 COPY --from=moth /puzzles/ /puzzles/
 COPY --from=moth /theme/ /theme/
 COPY --from=moth /bin/ /bin/
+COPY --from=moth /state/ /state/
 
 COPY --from=builder /build/dist/moth-*.whl /moth/
 

@@ -500,7 +500,7 @@ def _build_category_parser(category_parser):
     category_parsers = category_parser.add_subparsers()
 
     category_inventory_handler = category_parsers.add_parser("inventory")
-    category_inventory_handler.set_defaults(func=lambda cat_ob, args: json.dump(sorted(cat_ob.pointvals), sys.stdout))
+    category_inventory_handler.set_defaults(func=lambda cat_ob, args: json.dump({"Puzzles": sorted(cat_ob.pointvals)}, sys.stdout))
 
     category_puzzle_handler = category_parsers.add_parser("puzzle")
     category_puzzle_handler.add_argument("points")
