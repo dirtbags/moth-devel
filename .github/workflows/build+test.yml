@@ -16,10 +16,6 @@ jobs:
       - name: Retrieve code
         uses: actions/checkout@v2
 
-      - name: Gitlab variables
-        id: vars
-        run: build/ci/gitlab-vars
-
       - name: Login to GitHub Packages Docker Registry
         uses: docker/login-action@v1
         with:
