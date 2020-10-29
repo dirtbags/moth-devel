@@ -47,7 +47,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           target: devel-server
-          file: Containerfile
+          file: contrib/python/Containerfile
           push: true
           context: contrib/python/
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
