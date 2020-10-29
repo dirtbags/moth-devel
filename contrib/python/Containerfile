@@ -17,8 +17,14 @@ FROM dirtbags/moth:v4.0.1 AS moth
 
 
 FROM python:3.8-slim-buster AS devel-server
+
+# Upgrade image packages, install dependencies for some Python libraries which might not have binaries on all platforms
 RUN	apt-get update && \
 	apt-get upgrade -y && \
+	apt-get install -y --no-install-recommends \
+		gcc
+		libjpeg-dev
+		zlib1g-dev
 	apt-get clean all && \
 	rm -rf /var/lib/apt/lists/*
 
@@ -33,6 +39,14 @@ COPY --from=builder /build/dist/moth-*.whl /moth/
 
 # Use this hackish way to find the wheel file, because pip doesn't like globs
 RUN	find /moth/ -type f -iname '*.whl' | xargs -I '{}' pip install {}[scapy,pillow]
+
+# Remove dependencies that aren't necessary after building Pillow
+RUN	apt-get remove -y \
+		gcc \
+		libjpeg-dev \
+		zlib1g-dev \
+	&& \
+	apt-get autoremove
 
 CMD [ "/bin/mothd", "-puzzles", "/puzzles" ]
 
