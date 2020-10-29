@@ -7,13 +7,13 @@ RUN	apt-get update && \
 
 WORKDIR /build
 
-COPY	setup.py MANIFEST.in setup.cfg VERSION /build/
+COPY	setup.py MANIFEST.in setup.cfg /build/
 COPY	moth	/build/moth/
 
 RUN	python setup.py bdist_wheel
 
 
-FROM dirtbags/moth:v4.0.1 AS moth
+FROM dirtbags/moth:v4.0.2 AS moth
 
 
 FROM python:3.8-slim-buster AS devel-server
