@@ -1,4 +1,4 @@
-name: Build/Test/Push
+name: Test/Push
 
 on: 
   push:
@@ -50,7 +50,7 @@ jobs:
           file: contrib/python/Containerfile
           push: true
           context: contrib/python/
-          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le
           tags: |
             dirtbags/moth-devel:${{ steps.vars.outputs.tag }}
             ghcr.io/dirtbags/moth-devel:${{ steps.vars.outputs.tag }}
