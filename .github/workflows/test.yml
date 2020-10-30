@@ -7,7 +7,7 @@ on:
   push: []
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
     strategy:
@@ -38,3 +38,34 @@ jobs:
         cd ./contrib/python
         pip install tox tox-wheel
         tox -e py
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.0
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+    - name: Build wheel
+      run: |
+        cd ./contrib/python/
+        python setup.py bdist_wheel
+    - name: Upload wheel file
+      uses: actions/upload-artifact@v2
+      with:
+        name: Python Wheels
+        path: ./contrib/python/dist/
+
