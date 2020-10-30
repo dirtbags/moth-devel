@@ -1,9 +1,12 @@
 Dirtbags Monarch of the Hill Devel Server
 ===============
 
-Main branch: ![Test/Push Status (main)](https://github.com/dirtbags/moth-devel/workflows/Test/Push/badge.svg?branch=main)
+| Main | Devel |
+| ---- | ---- |
+|![Docker build status (main)](https://github.com/dirtbags/moth-devel/workflows/Docker%20build/badge.svg?branch=main)|![Docker build Status (devel)](https://github.com/dirtbags/moth-devel/workflows/Docker%20build/badge.svg?branch=devel)|
+|![Python test status (main)](https://github.com/dirtbags/moth-devel/workflows/Test%20and%20build%20Python%20library/badge.svg?branch=main)|![Test Python library (devel)](https://github.com/dirtbags/moth-devel/workflows/Test%20and%build%20Python%20library/badge.svg?branch=devel)|
 
-Devel branch: ![Test/Push Status (devel)](https://github.com/dirtbags/moth-devel/workflows/Test/Push/badge.svg?branch=devel)
+
 
 Read [more](https://github.com/dirtbags/moth) about Dirtbags MOTH.
 
