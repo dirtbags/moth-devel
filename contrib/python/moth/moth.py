@@ -3,6 +3,7 @@
 from argparse import ArgumentParser
 import contextlib
 import copy
+import glob
 import hashlib
 import html
 import io
@@ -10,14 +11,17 @@ import importlib.machinery
 import json
 import logging
 import os
+import os.path
 import pathlib
 import random
 import shutil
 import string
+import subprocess
 import sys
 import tempfile
 import types
 import warnings
+
 
 API_VERSION = "4.0"
 
@@ -593,6 +597,111 @@ def build_category(make, pointvals):
             return puzzle
 
     main(CatWrapper())
+
+
+class NestedCategory(Category):
+
+    """A class for handling nested categories
+    
+    Given a structure like the below:
+    ```
+    mkcategory
+    subcatA/
+      1/puzzle.md
+      3/mkpuzzle
+    subcatB/
+      2/puzzle.md
+      100/mkpuzzle
+    ```
+
+    Use code like the below in `mkcategory` to combine all of the child
+    categories and puzzles into a single category
+
+    ```python
+    #!/usr/bin/env python
+    from moth import NestedCategory
+
+    if __name__ == '__main__':
+        __import__('moth').main(NestedCategory())
+    ```
+    """
+
+    def __init__(self):
+        self.pointvals = []
+        self._puzzlecats = {}
+        self.load_subcategories()
+
+    def load_subcategories(self):
+        """Load categories from subdirectories"""
+        pointvals = []
+        puzzlecats = {}
+
+        base_path = os.path.dirname(sys.argv[0])
+
+        for cat_path in glob.glob("%s/*" % (base_path,)):
+            cat_name = os.path.basename(cat_path)
+
+            if os.path.basename(cat_name) in ["mkcategory", "disabled", "__pycache__"]:
+                continue
+
+            process = subprocess.run(["transpile", "inventory", "-dir", cat_path], capture_output=True, check=True)
+            if process.returncode == 0:
+                puzzle_values = [int(x) for x in process.stdout.split() if x.isdigit()]
+                for puzzle_value in puzzle_values:
+                    if puzzle_value in pointvals:
+                        raise Exception("Duplicate point val (%s) in %s and %s" % (puzzle_value, cat_name, puzzlecats[puzzle_value]["category"]))
+
+                    pointvals.append(puzzle_value)
+                    puzzlecats[puzzle_value] = {
+                        "category": cat_name,
+                        "category_path": cat_path,
+                        "puzzle_path": os.path.join(cat_path, str(puzzle_value)),
+                    }
+
+        pointvals = sorted(pointvals)
+
+        self.pointvals = pointvals
+        self._puzzlecats = puzzlecats
+
+    def puzzle(self, points):
+
+        puzzlecats = self._puzzlecats
+
+        points = int(points)
+
+        class WrappedPuzzle(Puzzle):
+
+            """Wrap a puzzle (of any type) inside of a Python object"""
+
+            def package(self):
+
+                process = subprocess.run(["transpile", "puzzle", "-dir", puzzlecats[points]["puzzle_path"]], capture_output=True, check=True)
+                if process.returncode == 0:
+                    return json.loads(process.stdout)
+
+                return None
+
+            def open(self, filename):
+
+                process = subprocess.run(["transpile", "open", "-dir", puzzlecats[points]["puzzle_path"], "-file", filename], capture_output=True, check=True)
+
+                if process.returncode == 0:
+                    file_buffer = io.BytesIO(process.stdout)
+                    return file_buffer
+
+                return io.BytesIO(b"")
+
+            def answer(self, answer):
+
+                process = subprocess.run(["transpile", "answer", "-dir", puzzlecats[points]["puzzle_path"], "-answer", answer], capture_output=True, check=True)
+
+                if process.returncode == 0:
+                    if process.stdout.strip() == b"correct":
+                        return {"Correct": True}
+
+                return {"Correct": False}
+
+        return WrappedPuzzle()
 
 
 # Words for generating answers.
