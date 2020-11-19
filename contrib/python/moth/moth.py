@@ -602,7 +602,7 @@ def build_category(make, pointvals):
 class NestedCategory(Category):
 
     """A class for handling nested categories
-    
+
     Given a structure like the below:
     ```
     mkcategory
@@ -641,7 +641,7 @@ class NestedCategory(Category):
         for cat_path in glob.glob("%s/*" % (base_path,)):
             cat_name = os.path.basename(cat_path)
 
-            if os.path.basename(cat_name) in ["mkcategory", "disabled", "__pycache__"]:
+            if not os.path.isdir(cat_path) or os.path.basename(cat_name) in ["mkcategory", "disabled", "__pycache__"]:
                 continue
 
             process = subprocess.run(["transpile", "inventory", "-dir", cat_path], capture_output=True, check=True)
@@ -702,6 +702,49 @@ class NestedCategory(Category):
                 return {"Correct": False}
 
         return WrappedPuzzle()
+
+
+class FlexibleNestedCategory(NestedCategory):
+
+    """Similar to NestedCategory, but handles subcategories which have the same point numbers by moving them around"""
+
+    def load_subcategories(self):
+        """Load categories from subdirectories, but don't fail on collisions"""
+        pointvals = []
+        puzzlecats = {}
+
+        base_path = os.path.dirname(sys.argv[0])
+
+        for cat_path in glob.glob("%s/*" % (base_path,)):
+            cat_name = os.path.basename(cat_path)
+
+            if not os.path.isdir(cat_path) or os.path.basename(cat_name) in ["mkcategory", "disabled", "__pycache__"]:
+                continue
+
+            process = subprocess.run(["transpile", "inventory", "-dir", cat_path], capture_output=True, check=True)
+            if process.returncode == 0:
+                puzzle_values = [int(x) for x in process.stdout.split() if x.isdigit()]
+                for puzzle_value in puzzle_values:
+                    orig_puzzle_value = puzzle_value
+                    for _ in range(100):
+                        if puzzle_value not in pointvals:
+                            pointvals.append(puzzle_value)
+                            puzzlecats[puzzle_value] = {
+                                "category": cat_name,
+                                "category_path": cat_path,
+                                "puzzle_path": os.path.join(cat_path, str(orig_puzzle_value)),
+                            }
+                            break
+
+                        puzzle_value += 1
+
+                    else:
+                        raise Exception("Duplicate point val (%s) in %s and %s" % (puzzle_value, cat_name, puzzlecats[puzzle_value]["category"]))
+
+        pointvals = sorted(pointvals)
+
+        self.pointvals = pointvals
+        self._puzzlecats = puzzlecats
 
 
 # Words for generating answers.
