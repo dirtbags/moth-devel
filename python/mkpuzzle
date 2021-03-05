@@ -1,0 +1,57 @@
+#! /usr/bin/python3
+
+import argparse
+import io
+import json
+import os
+import random
+import shutil
+import sys
+import puzzle as CurrentPuzzle
+
+class Puzzle:
+    def __init__(self, seed=""):
+        self.answers = []
+        self.authors = []
+        self.logs = []
+        self.scripts = []
+        self.body = io.StringIO()
+        self.rand = random.Random(os.getenv(""))
+
+    def log(self, msg):
+        self.logs.append(msg)
+
+    def json(self):
+        puzz = {
+            "Authors": self.authors,
+            "Answers": self.answers,
+            "Body": self.body.getvalue(),
+            "Scripts": self.scripts,
+            "Debug": {
+                "Log": self.logs,
+            }
+        }
+        return json.dumps(puzz)
+
+    def checkAnswer(self, answer):
+        return answer in self.answers
+
+
+def main():
+    parser = argparse.ArgumentParser(description="puzzle generator")
+    parser.add_argument("command", choices=["puzzle", "file", "answer"])
+    parser.add_argument("arg", nargs="?")
+    args = parser.parse_args()
+
+    puzzle = Puzzle()
+    CurrentPuzzle.make(puzzle)
+
+    if args.command == "puzzle":
+        print(puzzle.json())
+    elif args.command == "answer":
+        print(json.dumps(puzzle.checkAnswer(args.arg)))
+    elif args.command == "file":
+        shutil.copyfileobj(open(args.arg, "rb"), sys.stdout.buffer)
+
+if __name__ == '__main__':
+    main()
