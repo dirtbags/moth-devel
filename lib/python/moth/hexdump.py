@@ -40,7 +40,7 @@ standardGlyphs = (
 )
 
 class HexDumper:
-    def __init__(self, output, glyphset=fluffyGlyphs, elide="", "⋮", gap=("__", "�")):
+    def __init__(self, output, glyphset=fluffyGlyphs, elide="⋮", gap=("__", "�")):
         """Write a hex dump of data to the puzzle body
 
         f is the file object where the dump will be written.
@@ -93,19 +93,20 @@ class HexDumper:
         self.hexes = []
         self.chars = []
 
-    def add(self, b):
-        if self.offset and self.offset % 16 == 0:
-            self._spit()
+    def add(self, buf):
+        for b in buf:
+            if self.offset and self.offset % 16 == 0:
+                self._spit()
 
-        if b is None:
-            h, c = self.gap
-        else:
-            h = '{:02x}'.format(b)
-            c = self.glyphset[b]
-        self.chars.append(c)
-        self.hexes.append(h)
+            if b is None:
+                h, c = self.gap
+            else:
+                h = '{:02x}'.format(b)
+                c = self.glyphset[b]
+            self.chars.append(c)
+            self.hexes.append(h)
 
-        self.offset += 1
+            self.offset += 1
 
     def done(self):
         self._spit()

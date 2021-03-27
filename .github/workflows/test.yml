@@ -35,7 +35,7 @@ jobs:
         python -m pip install --upgrade pip
     - name: Run tox
       run: |
-        cd ./contrib/python
+        cd ./lib/python
         pip install tox tox-wheel
         tox -e py
   build:
@@ -62,11 +62,11 @@ jobs:
         pip install wheel
     - name: Build wheel
       run: |
-        cd ./contrib/python/
+        cd ./lib/python/
         python setup.py bdist_wheel
     - name: Upload wheel file
       uses: actions/upload-artifact@v2
       with:
         name: Python Wheels
-        path: ./contrib/python/dist/
+        path: ./lib/python/dist/
 

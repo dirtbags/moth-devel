@@ -34,13 +34,20 @@ class Puzzle:
         self.attachments = []
         self.hints = []
         self.logs = []
+        self.ksas = []
         self.summary = ""
+        self.answer_pattern = ""
+        self.objective = ""
         self.success = SuccessObject("", "")
         self.body = io.StringIO()
 
         self.rand = random.Random(seed)
-        self.words = None
         self.streams = {}
+        self.to_close = []
+
+    def __del__(self):
+        for f in self.to_close:
+            f.close()
 
     def log(self, *args, sep=" "):
         """Log a debugging message.
@@ -55,9 +62,12 @@ class Puzzle:
         return {
             "Authors": self.authors,
             "Answers": self.answers,
+            "AnswerPattern": self.answer_pattern,
             "Body": self.body.getvalue(),
             "Scripts": self.scripts,
             "Attachments": self.attachments,
+            "Objective": self.objective,
+            "KSAs": self.ksas,
             "Success": {
                 "Acceptable": self.success.acceptable,
                 "Mastery": self.success.mastery,
@@ -73,28 +83,31 @@ class Puzzle:
         """Returns a random word from the standard word list."""
         return self.rand.choice(words)
 
-    def make_answer(self, words=3):
+    def make_answer(self, words=3, sep=" "):
         """Returns a MOTH team approved random answer.
         
         Answers returned by this function's default arguments are guaranteed to 
         probably take more time to brute-force than a puzzle event runs.
         """
-        a = " ".join(self.randword() for i in range(words))
+        a = sep.join(self.randword() for i in range(words))
         self.answers.append(a)
         return a
 
-    def attach(self, filename: str, f: typing.BinaryIO):
+    def attach(self, filename: str, f: typing.BinaryIO, script=False):
         """Attaches a file object to the puzzle."""
 
-        self.attachments.append(filename)
+        if script:
+            self.scripts.append(filename)
+        else:
+            self.attachments.append(filename)
         self.streams[filename] = f
     
-    def attachFile(self, path: str):
+    def attach_file(self, path: str, script=False):
         """Opens a file and attaches it to the puzzle."""
 
-        filename = os.path.basename(path)
         f = open(path, "rb")
-        self.attach(filename, f)
+        self.attach(os.path.basename(path), f, script)
+        self.to_close.append(f)
 
 def parse_args(category=False):
     if category:

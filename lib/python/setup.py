@@ -11,7 +11,6 @@ setup(
     packages = ["moth"],
     python_requires = "~=3.5",
     install_requires = [
-        "mistune>=0.8.4",
         "PyYAML>=5.3.1",
     ],
     extras_require = {

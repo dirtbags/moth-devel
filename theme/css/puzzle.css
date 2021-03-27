@@ -1,0 +1,179 @@
+@import "moth.css";
+@font-face {
+  font-family: "Go";
+  src: url("../fonts/Go-Regular.ttf");
+}
+
+body {
+	background: none;
+  color: #000;
+  margin: 8px;
+}
+
+pre {
+  background-color: #fff;
+  color: #000;
+  padding: 0.5em;
+  overflow: scroll;
+}
+
+p {
+  max-width: 35em;
+  overflow-wrap: break-word;
+}
+
+img {
+  max-width: calc(100vw - 16px);
+}
+
+input:invalid {
+  box-shadow: 0 0 5px 0 red;
+}
+
+.metadata {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0.5em;
+}
+
+.metadata h3 {
+  margin: 0.2em 0;
+}
+
+.authors {
+  font-style: oblique;
+}
+
+.loading {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  display: block;
+  width: 46px;
+  height: 46px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  border-color: #fff transparent #fff transparent;
+  animation: rotate 1.2s linear infinite;
+}
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.output code {
+  background: #000;
+  color: #fc6;
+  padding: 2px;
+}
+.error {
+  background: #224;
+  color: #fff;
+}
+
+thead {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+th, td {
+  padding: 0.5em;
+}
+th {
+  text-align: left;
+}
+
+/** Workspace
+ *
+ * Tools for this puzzle: shows up in content.
+ * Right now this is just a Python interpreter.
+ */
+ .workspace {
+  background-color: rgba(255, 240, 220, 0.3);
+  white-space: normal;
+  padding: 0;
+}
+
+.workspace .status {
+  font-size: 9pt;
+  font-family: Raleway;
+}
+.output {
+  background-color: #555;
+  color: #fff;
+  border: 3px solid black;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 3em;
+  max-height: 24em;
+  overflow: scroll;
+}
+
+.output, .editor {
+  font-family: Go, monospace;
+}
+
+.stdout,
+.stderr,
+.stdinfo,
+.traceback {
+  white-space: pre-wrap;
+  overflow: scroll;
+}
+.stderr {
+  color: #f88;
+}
+.traceback {
+  background-color: #222;
+}
+.stdinfo {
+  font-style: italic;
+}
+
+.editor {
+  border: 1px solid black;
+  overflow-y: scroll;
+  max-height: 24em;
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  font-size: 12pt;
+  line-height: 1.2rem;
+}
+.editor .linenos {
+  background-color: #eee;
+  white-space: pre;
+  min-width: 2em;
+  padding: 0 4px;
+  text-align: right;
+  height: fit-content;
+}
+.editor .text {
+  background-color: #fff;
+  flex-grow: 1;
+  flex-shrink: 1;
+  white-space: nowrap;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  padding: 0 4px;
+  height: fit-content;
+}
+
+/* Some things that crop up in puzzles */
+[draggable] {
+  padding-left: 1em;
+  background-image: url(../images/drag-handle.svg);
+  background-position: 0 center;
+  background-size: 1em 1em;
+  background-repeat: no-repeat;
+  background-color: rgba(255, 255, 255, 0.4);
+  margin: 2px 0px;
+  cursor: move;
+}
+
+[draggable].over,
+[draggable].moving {
+  background-color: rgba(127, 127, 127, 0.5);
+}

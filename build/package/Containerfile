@@ -1,27 +1,26 @@
-FROM python:3.8-slim-buster AS builder
+# Hey, Neale, versioning this is kind of problematic!
+FROM dirtbags/moth:v4.2 AS moth
 
+# Python library
+FROM python:3.8-slim-buster AS builder-python
 RUN	apt-get update && \
 	apt-get upgrade -y && \
 	apt-get clean all && \
 	rm -rf /var/lib/apt/lists/*
-
 WORKDIR /build
-
-COPY	setup.py MANIFEST.in setup.cfg /build/
-COPY	moth	/build/moth/
-
+COPY    lib/python /build
+# I apologize for this. Python's build system baffles me.
+RUN ln -s . /build/python
 RUN	python setup.py bdist_wheel
 
 
-FROM dirtbags/moth:v4.0.2 AS moth
-
-
-FROM python:3.8-slim-buster AS devel-server
+# The main thing
+FROM ubuntu:rolling as moth-devel
 
 # Upgrade image packages, install dependencies for some Python libraries which might not have binaries on all platforms
-RUN	apt-get update && \
-	apt-get upgrade -y && \
-	apt-get install -y --no-install-recommends \
+RUN	apt-get update && apt-get upgrade -y
+RUN apt-get install -y --no-install-recommends \
+	    python3-pip \
 		gcc \
 		libjpeg-dev \
 		zlib1g-dev \
@@ -29,25 +28,17 @@ RUN	apt-get update && \
 	apt-get clean all && \
 	rm -rf /var/lib/apt/lists/*
 
-WORKDIR	/
-
 COPY --from=moth /puzzles/ /puzzles/
-COPY --from=moth /theme/ /theme/
-COPY --from=moth /bin/ /bin/
 COPY --from=moth /state/ /state/
+COPY --from=moth /bin/ /bin/
+COPY --from=builder-python /build/dist/moth-*.whl /moth/
+COPY puzzles/ /puzzles/
+COPY theme/ /theme/
 
-COPY --from=builder /build/dist/moth-*.whl /moth/
 
 # Use this hackish way to find the wheel file, because pip doesn't like globs
 RUN	find /moth/ -type f -iname '*.whl' | xargs -I '{}' pip install {}[scapy,pillow]
 
-# Remove dependencies that aren't necessary after building Pillow
-RUN	apt-get remove -y \
-		gcc \
-		libjpeg-dev \
-		zlib1g-dev \
-	&& \
-	apt-get autoremove -y
-
+WORKDIR /
 CMD [ "/bin/mothd", "-puzzles", "/puzzles" ]
 
