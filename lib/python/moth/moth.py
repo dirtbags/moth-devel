@@ -11,7 +11,6 @@ and it will open "category.py" in your directory.
 """
 
 import argparse
-import collections
 import io
 import random
 import os
@@ -19,11 +18,15 @@ import json
 import shutil
 import sys
 import typing
+from dataclasses import dataclass
 
 globalSeed = os.getenv("SEED", "1")
 basepath = os.path.dirname(os.path.realpath(sys.argv[0]))
 
-SuccessObject = collections.namedtuple("success", ["acceptable", "mastery"])
+@dataclass
+class SuccessObject:
+    acceptable: str
+    mastery: str
 
 class Puzzle:
     """Puzzle represents a single MOTH puzzle."""

@@ -1,3 +1,5 @@
+import html
+
 # Taken from glyphs.h from https://dirtbags.net/fluffy/
 #     octets | cut -b 61- | sed 's/"/\\"/; s/.*/    "\0"/'
 fluffyGlyphs = (
@@ -39,8 +41,9 @@ standardGlyphs = (
     '················'
 )
 
+
 class HexDumper:
-    def __init__(self, output, glyphset=fluffyGlyphs, elide="⋮", gap=("__", "�")):
+    def __init__(self, output, glyphset=fluffyGlyphs, elide="⋮", gap=("__", "�"), htmlEscape=True):
         """Write a hex dump of data to the puzzle body
 
         f is the file object where the dump will be written.
@@ -67,11 +70,14 @@ class HexDumper:
         self.elide = elide
         self.gap = gap
 
+        if htmlEscape:
+            self.glyphset = [html.escape(c) for c in glyphset]
+
     def _spit(self):
         if self.elide:
             if self.chars == self.last:
                 if not self.eliding:
-                    self.output.write('*\n')
+                    self.output.write(elide + '\n')
                     self.eliding = True
                 self.hexes = []
                 self.chars = []
