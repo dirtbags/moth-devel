@@ -1,5 +1,5 @@
 # Hey, Neale, versioning this is kind of problematic!
-FROM dirtbags/moth:v4.2 AS moth
+FROM dirtbags/moth:v4.2.0 AS moth
 
 # Python library
 FROM python:3.8-slim-buster AS builder-python
