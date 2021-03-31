@@ -45,11 +45,13 @@ export class Puzzle {
     }
 
     // Set the base URL, so requests work right
-    let baseElement = idoc.querySelector("base")
-    if (! baseElement) {
-      baseElement = idoc.head.appendChild(idoc.createElement("base"))
+    if (this.baseURI) {
+      let baseElement = idoc.querySelector("base")
+      if (! baseElement) {
+        baseElement = idoc.head.appendChild(idoc.createElement("base"))
+      }
+      baseElement.href = this.baseURI.href
     }
-    baseElement.href = this.baseURI.href
 
     let cssUrls = new Set()
     cssUrls.add((new URL("css/puzzle.css", document.baseURI)).toString())
