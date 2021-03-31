@@ -66,6 +66,20 @@ class MothClient {
         pidInput.addEventListener("input", e => this.pidInput(e))
       }
     }
+
+    // If the URL specifies values, fill those in
+    let urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.has("pid")) {
+      pidInput.value = urlParams.get("pid")
+    }
+    if (urlParams.has("id")) {
+      document.querySelector("[name=id]").value = urlParams.get("id")
+    }
+    if (urlParams.has("name")) {
+      document.querySelector("[name=name]").value = urlParams.get("name")
+    }
+
+
   }
 
   fetch(url, args={}) {
