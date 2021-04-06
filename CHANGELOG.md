@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A few sample puzzles to demonstrate:
   - What the Python `moth` library provides
   - The client-side Python IDE
+- Client now provides the puzzle object and `checkAnswer()` to puzzle window
 
 ### Changed
 - Restructured to handle more than just Python (eg. theme)
