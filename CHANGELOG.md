@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Client now pulls down state right after logging in, so puzzle list shows right away
+- Hexdump bug with elided lines caused traceback
 
 ### Changed
 - Restructured to handle more than just Python (eg. theme)

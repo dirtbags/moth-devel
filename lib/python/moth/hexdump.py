@@ -77,7 +77,7 @@ class HexDumper:
         if self.elide:
             if self.chars == self.last:
                 if not self.eliding:
-                    self.output.write(elide + '\n')
+                    self.output.write(self.elide + '\n')
                     self.eliding = True
                 self.hexes = []
                 self.chars = []
