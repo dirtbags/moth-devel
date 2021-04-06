@@ -79,7 +79,7 @@ class MothClient {
       document.querySelector("[name=name]").value = urlParams.get("name")
     }
 
-
+    this.updateStateRightNow()
   }
 
   fetch(url, args={}) {
