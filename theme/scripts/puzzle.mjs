@@ -182,6 +182,9 @@ export class Puzzle {
       answerElement.removeAttribute("pattern")
     }
 
+    // Set window.puzzle to be the puzzle object, for helpers.js
+    doc.defaultView.puzzle = obj
+
     // Populate the Devel box
     this.updateDevelFields(obj)
 
@@ -367,4 +370,6 @@ export class Puzzle {
       }
     }
   }
+
+
 }
