@@ -182,11 +182,12 @@ export class Puzzle {
       answerElement.removeAttribute("pattern")
     }
 
-    // Set window.puzzle to be the puzzle object, for helpers.js
-    doc.defaultView.puzzle = obj
-
     // Populate the Devel box
     this.updateDevelFields(obj)
+
+    // Provide a checkAnswer function, and the puzzle, for scripts
+    doc.defaultView.checkAnswer = (a) => this.isPossiblyCorrectAnswer(a)
+    doc.defaultView.puzzle = obj
 
     // Open links in a new tab
     for (let link of doc.querySelectorAll("a[href]")) {
@@ -348,6 +349,15 @@ export class Puzzle {
     this.answerElement.dispatchEvent(new InputEvent("input"))
   }
 
+  async isPossiblyCorrectAnswer(a) {
+    let answerHash = await SHA256Hash(a)
+    for (let correctHash of (this.obj.AnswerHashes || [])) {
+      if (correctHash == answerHash) {
+        return true
+      }
+    }
+    return false
+  }
   // Check to see if the answer might be correct
   // This might be better done with the "constraint validation API"
   // https://developer.mozilla.org/en-US/docs/Learn/HTML/Forms/Form_validation#Validating_forms_using_JavaScript
@@ -362,12 +372,9 @@ export class Puzzle {
     
     ok.textContent = "❌"
     ok.title = "Wrong"
-    let answerHash = await SHA256Hash(answer)
-    for (let correctHash of (this.obj.AnswerHashes || [])) {
-      if (correctHash == answerHash) {
-        ok.textContent = "⭕"
-        ok.title = "Maybe right"
-      }
+    if (await this.isPossiblyCorrectAnswer(answer)) {
+      ok.textContent = "⭕"
+      ok.title = "Maybe right"
     }
   }
 
