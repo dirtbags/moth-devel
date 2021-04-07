@@ -406,19 +406,15 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
 
         attachments = [fn for fn, f in self.files.items()]
         return {
-            'Pre': {
-                'Authors': self.authors,
-                'Attachments': attachments,
-                'Scripts': self.scripts,
-                'Body': self.html_body(),
-                'AnswerHashes': self.hashes(),
-                'AnswerPattern': self.pattern,
-            },
-            'Post': {
-                'Objective': self.objective,
-                'Success': self.success,
-                'KSAs': self.ksas,
-            },
+            'Authors': self.authors,
+            'Attachments': attachments,
+            'Scripts': self.scripts,
+            'Body': self.html_body(),
+            'AnswerHashes': self.hashes(),
+            'AnswerPattern': self.pattern,
+            'Objective': self.objective,
+            'Success': self.success,
+            'KSAs': self.ksas,
             'Debug': {
                 'Log': self.logs,
                 'Hints': self.hints,
