@@ -18,7 +18,7 @@ async function listCategories(state ) {
     }
 }
 
-async function dumpCategory(state, cat) {
+async function dumpCategory(state, cat, showAnswers=false) {
     let pointsList = state.Puzzles[cat]
     let div = document.body.appendChild(document.createElement("div"))
     div.classList.add("category")
@@ -82,6 +82,9 @@ async function dumpCategory(state, cat) {
                 }
             }
         }
+        if (!showAnswers) {
+            puzzle.Answers = []
+        }
         writeObject(fields, puzzle)
     }
 }
@@ -90,6 +93,7 @@ async function dumpCategory(state, cat) {
 async function appInit() {
     let params = new URLSearchParams(window.location.search)
     let cats = params.getAll("cat")
+    let showAnswers = params.get("answers")
 
     let resp = await mothFetch("../state")
     let state = await resp.json()
@@ -98,7 +102,7 @@ async function appInit() {
         listCategories(state)
     }
     for (let cat of cats) {
-        dumpCategory(state, cat)
+        dumpCategory(state, cat, showAnswers)
     }
 
     let title = params.get("title")
