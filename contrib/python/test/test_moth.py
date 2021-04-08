@@ -169,18 +169,25 @@ class TestMoth(unittest.TestCase):
 
         self.assertIsInstance(res, dict)
 
-        self.assertIn("Pre", res)
-        for field in ["Authors", "Attachments", "Scripts", "Body", "AnswerHashes", "AnswerPattern"]:
-            self.assertIn(field, res["Pre"])
+        for field in [
+                "Authors",
+                "Attachments",
+                "Scripts",
+                "Body",
+                "AnswerHashes",
+                "AnswerPattern",
+                "Objective",
+                "Success",
+                "KSAs",
+            ]:
+            self.assertIn(field, res)
 
-        self.assertIn(attachment_name, res["Pre"]["Attachments"])
+        self.assertIn(attachment_name, res["Attachments"])
 
 
-        self.assertIn("Post", res)
-        for field in ["Objective", "Success", "KSAs"]:
-            self.assertIn(field, res["Post"])
+        
 
-        self.assertIsInstance(res["Post"]["Success"], dict)
+        self.assertIsInstance(res["Success"], dict)
 
 
         self.assertIn("Debug", res)
