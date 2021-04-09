@@ -9,8 +9,18 @@
     <link rel="stylesheet" href="css/moth.css">
     <script type="module" src="scripts/moth.mjs"></script>
 
-    <!-- Polyfill for dialog element. Check https://caniuse.com/dialog to see if we can remove this yet. -->
     <script type="module">
+/*
+ * Welcome to kludgetown. Population: you, bro. 
+ */
+
+// I can't believe it's 2021 and I still need this
+if (window.navigator.userAgent.match(/MSIE|Trident/)) {
+  document.body.innerHTML = '<h1>Sorry, this app needs a browser released after 2011</h1><a href="https://www.engadget.com/2019-02-08-microsoft-internet-explorer-technical-debt.html">More info</a>'
+}
+
+// Polyfill for dialog element. 
+// Check https://caniuse.com/dialog to see if we can remove this yet. -->
 import("https://cdn.jsdelivr.net/npm/dialog-polyfill@0.5.6/dist/dialog-polyfill.esm.min.js")
 .then((dialogPolyfill) => {
   for (let e of document.querySelectorAll("dialog")) {

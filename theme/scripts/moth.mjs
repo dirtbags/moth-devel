@@ -375,10 +375,7 @@ function appInit(evt) {
   window.app = new MothClient()
 }
 
-if (window.navigator.userAgent.match(/MSIE|Trident/)) {
-  // I can't believe it's 2021 and I still need this
-  window.location = "https://www.engadget.com/2019-02-08-microsoft-internet-explorer-technical-debt.html"
-} else if (document.readyState === "loading") {
+if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", appInit)
 } else {
   appInit()

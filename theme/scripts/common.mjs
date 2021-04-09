@@ -69,8 +69,26 @@ export function uuidv4() {
   )
 }
 
+/**
+ * Removes all children from an element
+ * 
+ * @param element Parent element to cleanse
+ */
 export function removeChildren(element) {
   while (element && element.firstChild) {
     element.firstChild.remove()
   }
 }
+
+/**
+ * Fetches a URL, appending id and pid from localStorage
+ * 
+ * @param location URL to fetch
+ */
+export function mothFetch(location) {
+  let url = new URL(location, window.location)
+  url.searchParams.set("id", localStorage.id)
+  url.searchParams.set("pid", localStorage.pid)
+  return fetch(url)
+}
+

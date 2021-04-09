@@ -1,8 +1,13 @@
 // jshint asi:true
 
+// import { Chart, registerables } from "https://cdn.jsdelivr.net/npm/chart.js@3.0.2"
+// import {DateTime} from "https://cdn.jsdelivr.net/npm/luxon@1.26.0"
+// import "https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@0.1.1"
+// Chart.register(...registerables)
+
 function scoreboardInit() {
   
-  chartColors = [
+  let chartColors = [
     "rgb(255, 99, 132)",
     "rgb(255, 159, 64)",
     "rgb(255, 205, 86)",
@@ -11,15 +16,56 @@ function scoreboardInit() {
     "rgb(153, 102, 255)",
     "rgb(201, 203, 207)"
   ]
-  
-  function update(state) {
+
+  let chart
+  let canvas = document.querySelector("#chart canvas")
+  if (canvas) {
+    chart = new Chart(canvas.getContext("2d"), {
+      type: "line",
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            type: "time",
+            time: {
+              // XXX: the manual says this should do something, it does something in the samples, IDK
+              tooltipFormat: "HH:mm"
+            },
+            title: {
+              display: true,
+              text: "Time"
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Points"
+            }
+          }
+        },
+        tooltips: {
+          mode: "index",
+          intersect: false
+        },
+        hover: {
+          mode: "nearest",
+          intersect: true
+        }
+      }
+    })
+  }
+
+  async function refresh() {
+    let resp = await fetch("../state")
+    let state = await resp.json()
+
     for (let rotate of document.querySelectorAll(".rotate")) {
       rotate.appendChild(rotate.firstElementChild)
     }
     
     let element = document.getElementById("rankings")
-    let teamNames = state.teams
-    let pointsLog = state.points
+    let teamNames = state.TeamNames
+    let pointsLog = state.PointsLog
   
     // Every machine that's displaying the scoreboard helpfully stores the last 20 values of
     // points.json for us, in case of catastrophe. Thanks, y'all!
@@ -87,7 +133,8 @@ function scoreboardInit() {
         overall += team.categoryScore[cat] / highestCategoryScore[cat]
       }
   
-      team.historyLine.push({t: new Date(timestamp  * 1000), y: overall})
+      console.log(timestamp)
+      team.historyLine.push({x: timestamp * 1000, y: overall})
     }
   
     // Compute overall scores based on current highest
@@ -148,14 +195,21 @@ function scoreboardInit() {
       element.appendChild(row)
     }
     
-    let datasets = []
+    if (!chart) {
+      return
+    }
+
+    /*
+     * Update chart
+     */
+    chart.data.datasets = []
     for (let i in winners) {
       if (i > 5) {
         break
       }
       let team = winners[i]
       let color = chartColors[i % chartColors.length]
-      datasets.push({
+      chart.data.datasets.push({
         label: team.name,
         backgroundColor: color,
         borderColor: color,
@@ -164,70 +218,11 @@ function scoreboardInit() {
         fill: false
       })
     }
-    let config = {
-      type: "line",
-      data: {
-        datasets: datasets
-      },
-      options: {
-        responsive: true,
-        scales: {
-          xAxes: [{
-            display: true,
-            type: "time",
-            time: {
-              tooltipFormat: "ll HH:mm"
-            },
-            scaleLabel: {
-              display: true,
-              labelString: "Time"
-            }
-          }],
-          yAxes: [{
-            display: true,
-            scaleLabel: {
-              display: true,
-              labelString: "Points"
-            }
-          }]
-        },
-        tooltips: {
-          mode: "index",
-          intersect: false
-        },
-        hover: {
-          mode: "nearest",
-          intersect: true
-        }
-      }
-    }
-    
-    let chart = document.querySelector("#chart")
-    if (chart) {
-      let canvas = chart.querySelector("canvas")
-      if (! canvas) {
-        canvas = document.createElement("canvas")
-        chart.appendChild(canvas)
-      }
-      
-      let myline = new Chart(canvas.getContext("2d"), config)
-      myline.update()
-    }
+    chart.update()
+    window.chart = chart
+    console.log(chart)
   }
   
-  function refresh() {
-    fetch("points.json")
-    .then(resp => {
-      return resp.json()
-    })
-    .then(obj => {
-      update(obj)
-    })
-    .catch(err => {
-      console.log(err)
-    })
-  }
-
   function init() {
     let base = window.location.href.replace("scoreboard.html", "")
     let location = document.querySelector("#location")
