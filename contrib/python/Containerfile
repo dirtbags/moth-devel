@@ -13,7 +13,7 @@ COPY	moth	/build/moth/
 RUN	python setup.py bdist_wheel
 
 
-FROM dirtbags/moth:v4.2.0 AS moth
+FROM dirtbags/moth:v4.2.1 AS moth
 
 
 FROM python:3.8-slim-buster AS devel-server
