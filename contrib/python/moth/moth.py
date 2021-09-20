@@ -118,15 +118,13 @@ class PuzzleSuccess(dict):
     def __getattr__(self, attr):
         if attr in self.valid_fields:
             return self[attr]
-        raise AttributeError(
-            "'%s' object has no attribute '%s'" % (type(self).__name__, attr))
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{attr}'")
 
     def __setattr__(self, attr, value):
         if attr in self.valid_fields:
             self[attr] = value
         else:
-            raise AttributeError(
-                "'%s' object has no attribute '%s'" % (type(self).__name__, attr))
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{attr}'")
 
 
 class Puzzle:  # pylint: disable=too-many-instance-attributes
@@ -163,7 +161,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         if seed == "auto":
             seed = random.SystemRandom()
 
-        self.randseed = "%s %s" % (seed, os.getcwd())
+        self.randseed = f"{seed} {os.getcwd()}"
         self.rand = random.Random(self.randseed)
 
     @property
@@ -210,7 +208,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         if filename in self.files:
             return self.files[filename].stream
 
-        raise FileNotFoundError("%s was not found in this puzzle" % (filename,))
+        raise FileNotFoundError(f"{filename} was not found in this puzzle")
 
     def log(self, *vals):
         """Add a new log message to this puzzle.
@@ -237,7 +235,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         :returns: A file object for writing
         """
 
-        stream = tempfile.TemporaryFile()
+        stream = tempfile.TemporaryFile()  # pylint: disable=consider-using-with
         self.add_stream(stream, name, visible)
         return stream
 
@@ -269,7 +267,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         :param visble (optional): A boolean specifying whether the file should appear in the puzzle's public listing. True by default
         """
 
-        fd = open(filename, 'rb')  # pylint: disable=invalid-name
+        fd = open(filename, 'rb')  # pylint: disable=invalid-name,consider-using-with
         name = os.path.basename(filename)
         self.add_stream(fd, name=name, visible=visible)
 
@@ -330,7 +328,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
             if buf_byte is None:
                 hex_char, char = gap
             else:
-                hex_char = '{:02x}'.format(buf_byte)
+                hex_char = f'{buf_byte:02x}'
                 char = charset[buf_byte]
             chars.append(char)
             hexes.append(hex_char)
@@ -354,7 +352,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
             pad = 16 - len(chars)
             hexes += ['  '] * pad
 
-            self.body.write('{:08x}  '.format(offset))
+            self.body.write(f'{offset:08x}  ')
             self.body.write(' '.join(hexes[:8]))
             self.body.write('  ')
             self.body.write(' '.join(hexes[8:]))
@@ -362,7 +360,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
             self.body.write(html.escape(''.join(chars)))
             self.body.write('|\n')
             offset += len(chars)
-        self.body.write('{:08x}\n'.format(offset))
+        self.body.write(f'{offset:08x}\n')
         self.body.write('</pre>')
 
     def get_body(self):
@@ -592,5 +590,5 @@ def build_category(make, pointvals):
 
 
 # Words for generating answers.
-ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
-                                                     'answer_words.txt'))]
+with open(os.path.join(os.path.dirname(__file__), 'answer_words.txt'), encoding="UTF-8") as wf:
+    ANSWER_WORDS = [w.strip() for w in wf]
