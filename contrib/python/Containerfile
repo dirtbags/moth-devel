@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster AS builder
+FROM docker.io/library/python:3.8-slim-buster AS builder
 
 RUN	apt-get update && \
 	apt-get upgrade -y && \
@@ -13,10 +13,10 @@ COPY	moth	/build/moth/
 RUN	python setup.py bdist_wheel
 
 
-FROM dirtbags/moth:v4.2.2 AS moth
+FROM docker.io/dirtbags/moth:v4.4.11 AS moth
 
 
-FROM python:3.8-slim-buster AS devel-server
+FROM docker.io/library/python:3.8-slim-buster AS devel-server
 
 # Upgrade image packages, install dependencies for some Python libraries which might not have binaries on all platforms
 RUN	apt-get update && \
