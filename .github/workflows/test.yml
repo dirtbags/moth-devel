@@ -36,7 +36,7 @@ jobs:
     - name: Run tox
       run: |
         cd ./contrib/python
-        pip install tox tox-wheel
+        pip install "tox~=4.0"
         tox -e py
   build:
     runs-on: ubuntu-latest
