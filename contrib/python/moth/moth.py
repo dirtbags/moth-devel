@@ -77,6 +77,11 @@ def loadmod(name, path):
     return loader.exec_module(mod)
 
 
+class MothException(Exception):
+
+    """A general exception for all MOTH errors"""
+
+
 class PuzzleFile:  # pylint: disable=too-few-public-methods
 
     """A file associated with a puzzle.
@@ -400,7 +405,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         """
 
         if not self._validate():
-            raise Exception("This puzzle does not currently validate")
+            raise MothException("This puzzle does not currently validate")
 
         attachments = [fn for fn, f in self.files.items()]
         return {
@@ -448,7 +453,7 @@ class Category:
 
     pointvals = []
 
-    def puzzle(self, points):  # pylint: disable=no-self-use
+    def puzzle(self, points):
         """Return a puzzle with the given point value
 
         :param points: Point value to generate
