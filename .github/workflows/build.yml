@@ -46,4 +46,3 @@ jobs:
           platforms: linux/amd64
           tags: |
             dirtbags/moth-devel:${{ steps.vars.outputs.tag }}
-            ghcr.io/dirtbags/moth-devel:${{ steps.vars.outputs.tag }}
