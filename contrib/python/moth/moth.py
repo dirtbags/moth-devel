@@ -473,7 +473,7 @@ def v3markup():
     :returns: A string containing rendered Markdown
     """
     import mistune  # pylint: disable=import-outside-toplevel
-    return mistune.Markdown(renderer=mistune.Renderer(escape=False))
+    return mistune.Markdown(renderer=mistune.HTMLRenderer(escape=False))
 
 
 def _build_puzzle_parser(puzzle_parser):

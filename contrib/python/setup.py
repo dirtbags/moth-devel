@@ -6,12 +6,12 @@ if sys.version_info < (3,5):
 
 setup(
     name = "moth",
-    version = "4.0.2",
+    version = "4.4.11",
     description = "The MOTH development toolkit",
     packages = ["moth"],
     python_requires = "~=3.5",
     install_requires = [
-        "mistune>=0.8.4",
+        "mistune~=3.0",
         "PyYAML>=5.3.1",
     ],
     extras_require = {
