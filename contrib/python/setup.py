@@ -23,7 +23,7 @@ setup(
         "coverage==4.5.3", 
         "flake8==3.7.7", 
         "frosted==1.4.1",
-        "nose>=1.3.7", 
+        "nose2~=0.13.0", 
         "pylint==2.3.1", 
         "requests>=2.22.0",
     ],
