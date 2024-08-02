@@ -167,7 +167,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
             seed = random.SystemRandom()
 
         self.randseed = f"{seed} {os.getcwd()}"
-        self.rand = random.Random(self.randseed) #nosec B311
+        self.rand = random.Random(self.randseed)  # nosec B311
 
     @property
     def author(self):
